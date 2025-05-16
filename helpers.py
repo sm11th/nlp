@@ -30,14 +30,14 @@ def gen_gpt2_output(prompt: str, model, tokenizer, max_tokens: int) -> str:
     return gen_text
 
 
-def get_t5_output(prompts: list, tokenizer, model, max_length) -> list:
+def get_t5_output(prompts, tokenizer, model, max_length) -> list:
     [input_ids, attention_mask] = tokenize_inputs(prompts, tokenizer)
     output = model.generate(input_ids=input_ids, attention_mask=attention_mask, max_length=max_length)
     decoded_output = tokenizer.batch_decode(output, skip_special_tokens=True)
     return decoded_output
 
 
-def tokenize_inputs(prompts: list, tokenizer):
+def tokenize_inputs(prompts, tokenizer):
     tokenized_inputs = tokenizer(prompts, padding=True, truncation=True, return_tensors="pt")
     input_ids = tokenized_inputs["input_ids"].to("mps")  # move tensors to MPS
     attention_mask = tokenized_inputs["attention_mask"].to("mps")
@@ -64,7 +64,7 @@ def verbalise_inf(output: str) -> str:
     
 def verbalise_halluc(output: str) -> int:
     output = output.lower()
-    if("non-factual" in output or "inaccurate" in output or "contradicts" in output or "contradiction" in output or "false" in output or "wrong" in output or "different" in output):
+    if("non-factual" in output or "inaccurate" in output or "contradicts" in output or "contradiction" in output or "false" in output or "wrong" in output or "different" in output or "no" in output):
         return 0
     else:
         return 1

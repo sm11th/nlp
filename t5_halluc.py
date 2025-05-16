@@ -10,33 +10,55 @@ warnings.filterwarnings('ignore')  # suppress all other warnings
 
 # same type situation
 # load the data
-dataset = load_dataset("potsawee/wiki_bio_gpt3_hallucination", split='evaluation').select(range(10))
+dataset = load_dataset("potsawee/wiki_bio_gpt3_hallucination", split='evaluation')
 
+# model setup
+mps_device = torch.device("mps")  # mps = runs on apple silicon gpus instead of just cpus
 
-# load the model
+print("loading model...")
+model = T5ForConditionalGeneration.from_pretrained("t5-base", device_map=str("auto")).to(mps_device)
 
-# load the tokenizer
+# tokenizer setup
+print("\nloading tokenizer...")
+tokenizer = T5Tokenizer.from_pretrained("t5-base")
 
-# make prompt w/ gen_input + prefix
+# make prefix:
+prefix = """
+Factuality classification (1 = factual, 0 = non-factual):
+Is the hypothesis factually supported by the premise? Answer with 1 (yes) or 0 (no):
+"""
 
-# chunk the data
+# shard (chunk) the data
+# divide list into 58 shards (should be around 4 elements per shard) (my laptop cannot handle any more, RIP)
+num_shards = 58
 
-# total_outputs = []
-# total_ground_truths = []
-# for each chunk in data:
-    # sentences_outputs = []
-    # for each sentence in chunk:
-        # get_t5_output
-        # append output to sentences_outputs
+total_outputs = []
+total_ground_truths = []
+
+for i in range(num_shards):
+    current_shard = dataset.shard(num_shards=num_shards, index=i)
+    total_prompts = []
+
+    for line in current_shard:
+        wiki_text = line["wiki_bio_text"]
+        gpt_sentences = line["gpt3_sentences"]
+        line_ground_truths = line["annotation"]
+        total_ground_truths.extend(line_ground_truths)
+        sentence_outputs = []
+
+        for sentence in gpt_sentences:
+            formatted_prompt = gen_input(prompt=prefix, premise=wiki_text, hypothesis=sentence)
+            total_prompts.append(formatted_prompt)
     
-    # verbalise sentences_outputs
-    # verbalise ground truths in chunk
+    outputs = get_t5_output(total_prompts, tokenizer, model, max_length=6)
+    total_outputs.extend(outputs)
+    
 
-    # total_outputs.extend(verbalised sentence outputs)
-    # total_ground_truths.extend(verbalised ground truths)
+verbalised_outputs = verbalise_list(total_outputs, "fact-checking")
+verbalised_ground_truths = verbalise_list(total_ground_truths, "fact-checking")
 
-# print("accuracy: ", accuracy_score(ground_truths, total_outputs))
-# print("precision: ", precision_score(ground_truths, total_outputs))
-# print("recall: ", recall_score(ground_truths, total_outputs))
-# print("f1 score: ", f1_score(ground_truths, total_outputs))
+print("accuracy: ", accuracy_score(verbalised_ground_truths, verbalised_outputs))
+print("precision: ", precision_score(verbalised_ground_truths, verbalised_outputs))
+print("recall: ", recall_score(verbalised_ground_truths, verbalised_outputs))
+print("f1 score: ", f1_score(verbalised_ground_truths, verbalised_outputs))
 

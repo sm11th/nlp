@@ -4,7 +4,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from helpers import gen_input, gen_gpt2_output, verbalise_list
 
 # load dataset
-dataset = load_dataset("potsawee/wiki_bio_gpt3_hallucination", split='evaluation').select(range(10))
+dataset = load_dataset("potsawee/wiki_bio_gpt3_hallucination", split='evaluation')
 
 # load model 
 print("load model...")

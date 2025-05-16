@@ -81,5 +81,5 @@ print("\n[verbalised] first ten unmatched: ", verbalised_unmatched_outputs[:10])
 matched_ground_truths = [sample[0] for sample in matched_samples]
 unmatched_ground_truths = [sample[0] for sample in unmatched_samples]
 
-print("matched accuracy: ", accuracy_score(matched_ground_truths, total_matched_outputs))
-print("unmatched accuracy: ", accuracy_score(unmatched_ground_truths, total_unmatched_outputs))
+print("matched accuracy: ", accuracy_score(matched_ground_truths, verbalised_matched_outputs))
+print("unmatched accuracy: ", accuracy_score(unmatched_ground_truths, verbalised_unmatched_outputs))
