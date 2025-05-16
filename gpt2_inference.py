@@ -61,12 +61,16 @@ for sample in unmatched_samples:
     unmatched_results.append(cleaned_output)
 
 print("results: ", matched_results[:10])
+print("unmatched results: ", unmatched_results[:10])
+
 # verbalise results
 print("\nverbalising results...")
 verbalised_matched_results = verbalise_list(matched_results, "entailment")
 verbalised_unmatched_results = verbalise_list(unmatched_results, "entailment")
 
 print("verbalised results: ", verbalised_matched_results[:10])
+print("verbalised unmatched results: ", verbalised_unmatched_results[:10])
+
 
 
 # evaluate -- get accuracy
