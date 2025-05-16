@@ -3,7 +3,7 @@ import os
 import warnings
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 from sklearn.metrics import accuracy_score
-from helpers import gen_input, verbalise_list, extract_nli_data, get_t5_output
+from helpers import gen_input, verbalise_list, extract_nli_data, gen_t5_output
 os.environ['TRANSFORMERS_VERBOSITY'] = 'error'  # suppress transformer warnings
 warnings.filterwarnings('ignore')  # suppress all other warnings
 
@@ -22,17 +22,17 @@ tokenizer = T5Tokenizer.from_pretrained("t5-base")
 # 3. data preparation:
 # load 2 datasets (matched + mismatched)
 # extract gold_label (gt), sentence 1 (premise), sentence 2 (hypothesis) from datasets
-matched_samples = extract_nli_data("dev_matched_sampled-1.jsonl")[:50]
+matched_samples = extract_nli_data("dev_matched_sampled-1.jsonl")
 print("matched samples len: ", len(matched_samples))
-unmatched_samples = extract_nli_data("dev_mismatched_sampled-1.jsonl")[:50]
+unmatched_samples = extract_nli_data("dev_mismatched_sampled-1.jsonl")
 print("unmatched samples len: ", len(unmatched_samples))
 
 
 # 4. task definition
-prefix = """
-mnli:
-Choose one: entailment, contradiction, or neutral.
-"""
+prefix = "mnli: "
+# prefix = """
+# mnli: Choose one, entailment, contradiction, or neutral:
+# """
 matched_prompts = []
 unmatched_prompts = []
 
@@ -57,13 +57,13 @@ print("length of unmatched chunk: ", len(chunked_unmatched_prompts[0]), "\nlengt
 print("\nmatched samples -- configure inputs; generate and decode outputs...")
 total_matched_outputs = []
 for chunk in chunked_matched_prompts:
-    matched_outputs = get_t5_output(chunk, tokenizer, model, max_length=6)
+    matched_outputs = gen_t5_output(chunk, tokenizer, model, max_length=5)
     total_matched_outputs.extend(matched_outputs)
 
 print("\nunmatched samples -- configure inputs; generate and decode outputs...")
 total_unmatched_outputs = []
 for chunk in chunked_unmatched_prompts:
-    unmatched_outputs = get_t5_output(chunk, tokenizer, model, max_length=6)
+    unmatched_outputs = gen_t5_output(chunk, tokenizer, model, max_length=5)
     total_unmatched_outputs.extend(unmatched_outputs)
 
 print("\nmatched: ", total_matched_outputs[:10])

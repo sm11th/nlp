@@ -4,7 +4,7 @@ import warnings
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 from datasets import load_dataset
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from helpers import gen_input, verbalise_list, extract_nli_data, get_t5_output
+from helpers import gen_input, verbalise_list, extract_nli_data, gen_t5_output
 os.environ['TRANSFORMERS_VERBOSITY'] = 'error'  # suppress transformer warnings
 warnings.filterwarnings('ignore')  # suppress all other warnings
 
@@ -16,11 +16,11 @@ dataset = load_dataset("potsawee/wiki_bio_gpt3_hallucination", split='evaluation
 mps_device = torch.device("mps")  # mps = runs on apple silicon gpus instead of just cpus
 
 print("loading model...")
-model = T5ForConditionalGeneration.from_pretrained("t5-base", device_map=str("auto")).to(mps_device)
+model = T5ForConditionalGeneration.from_pretrained("t5-small", device_map=str("auto")).to(mps_device)
 
 # tokenizer setup
 print("\nloading tokenizer...")
-tokenizer = T5Tokenizer.from_pretrained("t5-base")
+tokenizer = T5Tokenizer.from_pretrained("t5-small")
 
 # make prefix:
 prefix = """
@@ -30,7 +30,7 @@ Is the hypothesis factually supported by the premise? Answer with 1 (yes) or 0 (
 
 # shard (chunk) the data
 # divide list into 58 shards (should be around 4 elements per shard) (my laptop cannot handle any more, RIP)
-num_shards = 58
+num_shards = 50
 
 total_outputs = []
 total_ground_truths = []
@@ -50,7 +50,7 @@ for i in range(num_shards):
             formatted_prompt = gen_input(prompt=prefix, premise=wiki_text, hypothesis=sentence)
             total_prompts.append(formatted_prompt)
     
-    outputs = get_t5_output(total_prompts, tokenizer, model, max_length=6)
+    outputs = gen_t5_output(total_prompts, tokenizer, model, max_length=6)
     total_outputs.extend(outputs)
     
 

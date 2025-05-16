@@ -30,7 +30,7 @@ def gen_gpt2_output(prompt: str, model, tokenizer, max_tokens: int) -> str:
     return gen_text
 
 
-def get_t5_output(prompts, tokenizer, model, max_length) -> list:
+def gen_t5_output(prompts, tokenizer, model, max_length) -> list:
     [input_ids, attention_mask] = tokenize_inputs(prompts, tokenizer)
     output = model.generate(input_ids=input_ids, attention_mask=attention_mask, max_length=max_length)
     decoded_output = tokenizer.batch_decode(output, skip_special_tokens=True)
@@ -44,27 +44,25 @@ def tokenize_inputs(prompts, tokenizer):
     return [input_ids, attention_mask]
 
 
-def gen_t5_output(input_ids, attention_mask, max_length, model, tokenizer) -> list:
-    output = model.generate(input_ids=input_ids, attention_mask=attention_mask, max_length=max_length)
-    decoded_output = tokenizer.batch_decode(output, skip_special_tokens=True)
-    return decoded_output
-
-
 # create verbaliser (converting output and such)
 def verbalise_inf(output: str) -> str:
     output = output.lower()
-    if("entail" in output or "entailment" in output or "true" in output or "correct" in output or "same" in output):
+    entailment_strings = ["entail", "entailment", "true", "correct", "same", "does hold"]
+    contradiction_strings = ["contradict", "false", "wrong", "different", "does not hold"]
+    neutral_strings = ["neutral", "ambiguous", "maybe"]
+    if(any(word in output for word in entailment_strings)):
         return "entailment"
-    elif("contradicts" in output or "contradiction" in output or "false" in output or "wrong" in output or "different" in output):
+    elif(any(word in output for word in contradiction_strings)):
         return "contradiction"
-    elif("neutral" in output or "ambiguous" in output or "maybe" in output):
+    elif(any(word in output for word in neutral_strings)):
         return "neutral"
     else:
         return "no meaningful result"
     
 def verbalise_halluc(output: str) -> int:
     output = output.lower()
-    if("non-factual" in output or "inaccurate" in output or "contradicts" in output or "contradiction" in output or "false" in output or "wrong" in output or "different" in output or "no" in output):
+    nonfactual_strings = ["0", "non-factual", "nonfactual", "non factual", "inaccurate", "contradict", "false", "wrong", "different"]
+    if(any(word in output for word in nonfactual_strings)):
         return 0
     else:
         return 1
@@ -84,3 +82,6 @@ def verbalise_list(list: list[str], task: str) -> list:
     else:
         raise NotImplementedError("{task} has not yet been implemented in verbalise_list")
     return verbalised_list
+
+def get_pseudo_log_likelihood():
+    print("hello")

@@ -17,9 +17,9 @@ tokenizer = AutoTokenizer.from_pretrained("gpt2")
 # load 2 datasets (matched + mismatched)
 # extract gold_label (gt), sentence 1 (premise), sentence 2 (hypothesis) from datasets
 
-matched_samples = extract_nli_data("dev_matched_sampled-1.jsonl")[:50]
+matched_samples = extract_nli_data("dev_matched_sampled-1.jsonl")
 print("matched samples len: ", len(matched_samples))
-unmatched_samples = extract_nli_data("dev_mismatched_sampled-1.jsonl")[:50]
+unmatched_samples = extract_nli_data("dev_mismatched_sampled-1.jsonl")
 print("unmatched samples len: ", len(unmatched_samples))
 
 
@@ -31,7 +31,14 @@ The relationship can be one of the following:
 - Contradiction: The hypothesis logically contradicts the premise.
 - Neutral: The hypothesis neither follows nor contradicts the premise.
 
-Here are the sentences with their relationship:
+Premise: My friend Frank went to the supermarket earlier today. Hypothesis: Frank didn't go yet, so he'll drive to the supermarket later today.
+Relationship: Contradiction
+
+Premise: She would never know what happened. Hypothesis: And she never was able to find out what occurred.
+Relationship: Entailment
+
+
+
 """
 
 
@@ -44,13 +51,13 @@ unmatched_results = []
 for sample in matched_samples:
     formatted_prompt = gen_input(prompt=prompt, premise=sample[1], hypothesis=sample[2])
     output = gen_gpt2_output(prompt=formatted_prompt, model=model, tokenizer=tokenizer, max_tokens=10)
-    cleaned_output = output.split("Relationship: ", 1)[1]  # split into prompt ([0]) and output ([1]), get just output
+    cleaned_output = output.split("Relationship: ", 3)[3]  # split into prompt ([0]) and output ([1]), get just output
     matched_results.append(cleaned_output)
 
 for sample in unmatched_samples:
     formatted_prompt = gen_input(prompt=prompt, premise=sample[1], hypothesis=sample[2])
     output = gen_gpt2_output(prompt=formatted_prompt, model=model, tokenizer=tokenizer, max_tokens=10)
-    cleaned_output = output.split("Relationship: ", 1)[1]  # split into prompt ([0]) and output ([1]), get just output
+    cleaned_output = output.split("Relationship: ", 3)[3]  # split into prompt ([0]) and output ([1]), get just output
     unmatched_results.append(cleaned_output)
 
 print("results: ", matched_results[:10])
